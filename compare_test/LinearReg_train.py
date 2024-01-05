@@ -2,29 +2,23 @@ import numpy as np
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
+import scipy.io as scio
 from sklearn.linear_model import LinearRegression
-from init.prepare import get_dataset
-
 
 vec=287
 
-data_path1 = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/10361_airpls_divide_peak1.mat'
-label_path1 = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/10361_ph_label.mat'
-data_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/solo_airpls_divide_peak1.mat'
-label_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/solo_ph_label.mat'
+data_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/data_total.mat'
+label_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))+'/dataset/pH_total.mat'
+data = scio.loadmat(data_path)
+label = scio.loadmat(label_path)
 
-X_train, X_val, Y_train, Y_val = get_dataset(data_path, label_path, vec_num=vec,test_size=0.2)
-X_train1, X_val1, Y_train1, Y_val1 = get_dataset(data_path1, label_path1, vec_num=vec,test_size=0.2)
-
-X_train = np.concatenate([X_train,X_train1],0)
-X_val = np.concatenate([X_val,X_val1],0)
-Y_train=np.concatenate([Y_train,Y_train1],0)
-Y_val=np.concatenate([Y_val,Y_val1],0)
+X_train=data['train']
+Y_train=label['train']
+X_val=data['test']
+Y_val=label['test']
 
 X_train=np.squeeze(X_train)
 X_val=np.squeeze(X_val)
-
 Y_val = Y_val*3+5
 
 model = LinearRegression()
@@ -32,7 +26,6 @@ history = model.fit(X_train, Y_train)
 predicted = model.predict(X_val)
 predicted=predicted*3+5
 
-print(Y_val.shape,predicted.shape)
 MAE = np.mean(abs(predicted-Y_val))
 SD = np.std(abs(predicted-Y_val))
 RMSE = np.sqrt(np.mean((predicted - Y_val)**2))
